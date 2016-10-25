@@ -3,6 +3,10 @@ var roleUpgrader = require('role.upgrader');
 var roleBuilder = require('role.builder');
 var roleRepairer = require('role.repairer');
 var roleHauler = require('role.hauler');
+
+var roleThief = require('role.thief');
+var roleAttacker = require('role.attacker');
+
 var structureSpawn = require('structure.spawn');
 var structureTower = require('structure.tower');
 
@@ -15,32 +19,25 @@ module.exports.loop = function () {
         }
     }
 
-    for(var structId in Game.structures)
-    {
-        if (Game.structures[structId].structureType === STRUCTURE_SPAWN) {
-            structureSpawn.run(Game.structures[structId]);
-        }
-        else if (Game.structures[structId].structureType === STRUCTURE_TOWER) {
-            structureTower.run(Game.structures[structId]);
+    for(var structId in Game.structures) {
+        var structure = Game.structures[structId];
+        switch (structure.structureType) {
+            case STRUCTURE_SPAWN: structureSpawn.run(structure); break;
+            case STRUCTURE_TOWER: structureTower.run(structure); break;
         }
     }
 
     for(var name in Game.creeps) {
         var creep = Game.creeps[name];
-        if(creep.memory.role == 'harvester') {
-            roleHarvester.run(creep);
-        }
-        if(creep.memory.role == 'upgrader') {
-            roleUpgrader.run(creep);
-        }
-        if(creep.memory.role == 'builder') {
-            roleBuilder.run(creep);
-        }
-        if(creep.memory.role == 'repairer') {
-            roleRepairer.run(creep);
-        }
-        if(creep.memory.role == 'hauler') {
-            roleHauler.run(creep);
+        
+        switch (creep.memory.role) {
+            case 'harvester': roleHarvester.run(creep); break;
+            case 'upgrader':  roleUpgrader.run(creep); break;
+            case 'builder':   roleBuilder.run(creep); break;
+            case 'repairer':  roleRepairer.run(creep); break;
+            case 'hauler':    roleHauler.run(creep); break;
+            case 'thief':     roleThief.run(creep); break;
+            case 'attacker':  roleAttacker.run(creep); break;
         }
     }
 }

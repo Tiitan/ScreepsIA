@@ -1,4 +1,4 @@
-var roleHauler = {
+var roleThief = {
 
     run: function(creep) {
 
@@ -6,7 +6,7 @@ var roleHauler = {
             creep.memory.upgrading = false;
             creep.say('To depot');
 	    }
-	    if(!creep.memory.upgrading && creep.carry.energy >= creep.carryCapacity - 30) {
+	    if(!creep.memory.upgrading && creep.carry.energy >= creep.carryCapacity) {
 	        creep.memory.upgrading = true;
 	        creep.say('Carrying');
 	    }
@@ -59,40 +59,30 @@ var roleHauler = {
                 if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(targets[0]);
                 }
+                return;
             }
+            
+            // Default: return to flag
+            creep.moveTo(Game.flags['IdleFlag']);
     	}
 	
     	function findEnergy() {
     	    
-    	    // Loot
-            var targets = creep.pos.findInRange(FIND_DROPPED_ENERGY, 2, {
-                filter: (dropppedEnergy) => { return dropppedEnergy.energy > 10;
-                }
-            });
-            if (targets.length > 0) {
-                targets = _.sortBy(targets, t => creep.pos.getRangeTo(t))
-                if(creep.pickup(targets[0]) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0]);
-                }
-                return;
-            }
-            
-    	    // Withdraw task container
-    	    var sources = creep.room.find(FIND_SOURCES);
-            targets = sources[creep.memory.task].pos.findInRange(FIND_STRUCTURES, 2, {
+    	    if (!creep.pos.isNearTo(Game.flags['DepotThiefFlag']))
+    	    {
+    	        creep.moveTo(Game.flags['DepotThiefFlag']);
+    	    }
+    	    else
+    	    {
+    	        var targets = creep.pos.findInRange(FIND_STRUCTURES, 2, {
                 filter: (structure) => {
-                    return structure.structureType == STRUCTURE_CONTAINER;
+                    return structure.structureType == STRUCTURE_SPAWN;
                 }
             });
-
-            if (targets.length > 0)
-            {
-                if(creep.withdraw(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0]);
-                }
-            }
+    	        creep.withdraw(targets[0], RESOURCE_ENERGY)
+    	    }
     	}
     }
 };
 
-module.exports = roleHauler;
+module.exports = roleThief;

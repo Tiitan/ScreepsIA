@@ -6,7 +6,7 @@ var roleUpgrader = {
             creep.memory.upgrading = false;
             creep.say('To depot');
 	    }
-	    if(!creep.memory.upgrading && creep.carry.energy == creep.carryCapacity) {
+	    if(!creep.memory.upgrading && creep.carry.energy > creep.carryCapacity - 30) {
 	        creep.memory.upgrading = true;
 	        creep.say('upgrading');
 	    }
@@ -32,19 +32,20 @@ var roleUpgrader = {
                 }
                 return;
             }
-                
-    	    // Withdraw nearest container
-            target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+            
+    	    // Withdraw controller container
+            targets = creep.room.controller.pos.findInRange(FIND_STRUCTURES, 2, {
                 filter: (structure) => {
-                    return structure.structureType == STRUCTURE_CONTAINER && structure.store[RESOURCE_ENERGY] > 0;
+                    return structure.structureType == STRUCTURE_CONTAINER;
                 }
             });
     
-            if (target)
+            if (targets.length > 0)
             {
-                if(creep.withdraw(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(target);
+                if(creep.withdraw(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(targets[0]);
                 }
+                return
             }
     	}
     }
