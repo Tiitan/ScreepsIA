@@ -48,10 +48,10 @@ var roleHauler = {
                 return;
             }
 
-            //Default: fill controller depot
+            //fill controller depot
             targets = creep.room.controller.pos.findInRange(FIND_STRUCTURES, 2, {
                 filter: (structure) => {
-                    return structure.structureType == STRUCTURE_CONTAINER;
+                    return structure.structureType == STRUCTURE_CONTAINER && creep.carryCapacity <= structure.storeCapacity - structure.store[RESOURCE_ENERGY];
                 }
             });
             if (targets.length > 0)
@@ -59,6 +59,12 @@ var roleHauler = {
                 if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(targets[0]);
                 }
+                return;
+            }
+            
+            // Default: storage
+            if(creep.transfer(creep.room.storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(creep.room.storage);
             }
     	}
 	

@@ -1,7 +1,7 @@
 var roleThief = {
 
     run: function(creep) {
-
+        
         if(creep.memory.upgrading && creep.carry.energy < 30) {
             creep.memory.upgrading = false;
             creep.say('To depot');
@@ -22,42 +22,10 @@ var roleThief = {
 	
     	function findDropLocation() {
     	    // Fill spawn
-            var target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {
-                filter: (structure) => {
-                    return (structure.structureType == STRUCTURE_EXTENSION ||
-                            structure.structureType == STRUCTURE_SPAWN) && structure.energy < structure.energyCapacity;
-                }
-            });
+            var target = creep.room.storage
             if(target) {
                 if(creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(target);
-                }
-                return;
-            }
-
-            // Fill turret
-            target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {
-                filter: (structure) => {
-                    return structure.structureType == STRUCTURE_TOWER && structure.energy + creep.carryCapacity <= structure.energyCapacity;
-                }
-            });
-            if(target) {
-                if(creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(target);
-                }
-                return;
-            }
-
-            //Default: fill controller depot
-            targets = creep.room.controller.pos.findInRange(FIND_STRUCTURES, 2, {
-                filter: (structure) => {
-                    return structure.structureType == STRUCTURE_CONTAINER;
-                }
-            });
-            if (targets.length > 0)
-            {
-                if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0]);
                 }
                 return;
             }
@@ -67,19 +35,43 @@ var roleThief = {
     	}
 	
     	function findEnergy() {
+    	    if (!Game.flags['DepotThiefFlag'])
+    	        return;
     	    
-    	    if (!creep.pos.isNearTo(Game.flags['DepotThiefFlag']))
+    	    if (creep.pos.getRangeTo(Game.flags['DepotThiefFlag']) > 100)
     	    {
     	        creep.moveTo(Game.flags['DepotThiefFlag']);
+    	        return;
     	    }
     	    else
     	    {
-    	        var targets = creep.pos.findInRange(FIND_STRUCTURES, 2, {
-                filter: (structure) => {
-                    return structure.structureType == STRUCTURE_SPAWN;
+    	        // Steal
+    	        var targets = Game.flags['DepotThiefFlag'].pos.findInRange(FIND_STRUCTURES, 10, {
+                    filter: (structure) => {
+                        return (structure.structureType == STRUCTURE_SPAWN || structure.structureType == STRUCTURE_EXTENSION) && 
+                            structure.energy >= 50;
+                    }
+                });
+                if (targets.length > 0) {
+    	            targets = _.sortBy(targets, t => creep.pos.getRangeTo(t))
+    	            
+        	        if (creep.withdraw(targets[0], RESOURCE_ENERGY)  == ERR_NOT_IN_RANGE)
+                        creep.moveTo(targets[0]);
+                        return;
                 }
-            });
-    	        creep.withdraw(targets[0], RESOURCE_ENERGY)
+                
+                // loot
+                var targets = creep.room.find(FIND_DROPPED_ENERGY, {
+                    filter: (dropppedEnergy) => { return dropppedEnergy.energy > 50;
+                    }
+                });
+                if (targets.length > 0) {
+                    targets = _.sortBy(targets, t => Game.flags['DepotThiefFlag'].pos.getRangeTo(t))
+                    if(creep.pickup(targets[0]) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(targets[0]);
+                    }
+                    return;
+                }
     	    }
     	}
     }

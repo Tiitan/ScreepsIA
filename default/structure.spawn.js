@@ -2,7 +2,7 @@ var structureSpawn = {
 
     run: function(spawn) {
 
-        if (GetAvailableEnergy(spawn) >= 700)
+        if (spawn.room.energyAvailable >= 700)
                 trySpawn(spawn);
 
         function trySpawn(spawn)
@@ -16,29 +16,33 @@ var structureSpawn = {
             var repairer = _.filter(Game.creeps, (creep) => creep.memory.role == 'repairer');
             var haulers = _.filter(Game.creeps, (creep) => creep.memory.role == 'hauler');
             var thiefs = _.filter(Game.creeps, (creep) => creep.memory.role == 'thief');
-
+            var attackers = _.filter(Game.creeps, (creep) => creep.memory.role == 'attacker');
     
             if(shouldSpawn(harvesters, 2, 45)) {
                 spawnHarvester(harvesters);
             }
-            else if(shouldSpawn(upgraders, 1, 30)) {
-                var newName = spawn.createCreep([WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE], undefined, {role: 'upgrader'});
+            else if(shouldSpawn(upgraders, 3, 30)) {
+                var newName = spawn.createCreep([WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE], undefined, {role: 'upgrader', mainRoom: spawn.room.name});
                 console.log('Spawning new upgrader: ' + newName);
             }
             else if(builder.length < 1 && spawn.room.find(FIND_CONSTRUCTION_SITES).length > 0) {
-                var newName = spawn.createCreep([WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE], undefined, {role: 'builder'});
+                var newName = spawn.createCreep([WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE], undefined, {role: 'builder', mainRoom: spawn.room.name});
                 console.log('Spawning new builder: ' + newName);
             }
             else if(repairer.length < 0) {
-                var newName = spawn.createCreep([WORK, CARRY, MOVE], undefined, {role: 'repairer'});
+                var newName = spawn.createCreep([WORK, CARRY, MOVE], undefined, {role: 'repairer', mainRoom: spawn.room.name});
                 console.log('Spawning new repairer: ' + newName);
             }
             else if(shouldSpawn(haulers, 2, 30)) {
                 spawnHauler(haulers);
             }
-            else if(shouldSpawn(thiefs, 0, 200)) {
-                var newName = spawn.createCreep([CARRY, CARRY, CARRY, MOVE, MOVE, MOVE], undefined, {role: 'thief'});
+            else if(shouldSpawn(thiefs, 0, 50) && Game.flags['DepotThiefFlag']) {
+                var newName = spawn.createCreep([CARRY, CARRY, MOVE, MOVE], undefined, {role: 'thief', mainRoom: spawn.room.name});
                 console.log('Spawning new thief: ' + newName);
+            }
+            else if(attackers < 1 && Game.flags['AttackFlag']) {
+                var newName = spawn.createCreep([ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE], undefined, {role: 'attacker', mainRoom: spawn.room.name});
+                console.log('Spawning new attacker: ' + newName);
             }
         }
         
@@ -62,35 +66,28 @@ var structureSpawn = {
                 task = harvesters[0].ticksToLive < harvesters[1].ticksToLive ? harvesters[0].memory.task : harvesters[1].memory.task;
             }
             
-            var newName = spawn.createCreep([WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE], undefined, {role: 'harvester', task: task});
+            var newName = spawn.createCreep([WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE], undefined, {role: 'harvester', task: task, mainRoom: spawn.room.name});
             console.log('Spawning new harvester: ' + newName);
         }
         
         function spawnHauler(haulers)
         {
+            // Define task
             var task = 0;
-            if (haulers.length == 1 && haulers[0].memory.task == 0)
+            if (haulers.length == 1 && haulers[0].memory.task == 0) {
                 task = 1;
-            if (haulers.length == 2)
-            {
+            }
+            else if (haulers.length == 2) {
                 task = haulers[0].ticksToLive < haulers[1].ticksToLive ? haulers[0].memory.task : haulers[1].memory.task;
             }
             
-            var newName = spawn.createCreep([CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE], undefined, {role: 'hauler', task: task});
+            // CHoose body based on task
+            var body = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
+            if (task == 1)
+                body.push(CARRY, CARRY, MOVE);
+                
+            var newName = spawn.createCreep(body, undefined, {role: 'hauler', task: task, mainRoom: spawn.room.name});
             console.log('Spawning new hauler: ' + newName);
-        }
-        
-        function GetAvailableEnergy(spawn)
-        {
-            var totalEnergy = 0;
-            var roomStructure = spawn.room.find(FIND_MY_STRUCTURES);
-            for(var struct in roomStructure)
-                {
-                    var energy = roomStructure[struct].energy;
-                    if (!isNaN(energy))
-                        totalEnergy += roomStructure[struct].energy;
-                }
-            return totalEnergy; 
         }
     }
 };

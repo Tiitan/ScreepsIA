@@ -1,9 +1,8 @@
 var roleHarvester = {
 
-    /** @param {Creep} creep **/
     run: function(creep) {
         
-	    if(creep.memory.building && creep.carry.energy == 0) {
+	    if(creep.memory.building && creep.carry.energy < creep.carryCapacity) {
             creep.memory.building = false;
 	    }
 	    if(!creep.memory.building && creep.carry.energy == creep.carryCapacity) {
@@ -24,10 +23,14 @@ var roleHarvester = {
             }
 	    }
 	    else {
-	        var sources = creep.room.find(FIND_SOURCES);
-            if(creep.harvest(sources[creep.memory.task]) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[creep.memory.task]);
-            }
+	        var targets = creep.room.memory.sources.filter((source) => source.task == creep.memory.task);
+	        if (targets.length > 0) {
+	            var targetPosition = require('helper').getRoomPosition(targets[0].serializedPos);
+	            if (creep.pos.isNearTo(targetPosition))
+	                creep.harvest(Game.getObjectById(targets[0].id));
+	            else
+	                creep.moveTo(targetPosition)
+	        }
 	    }
     }
 };

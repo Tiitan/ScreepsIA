@@ -36,7 +36,7 @@ var roleUpgrader = {
     	    // Withdraw controller container
             targets = creep.room.controller.pos.findInRange(FIND_STRUCTURES, 2, {
                 filter: (structure) => {
-                    return structure.structureType == STRUCTURE_CONTAINER;
+                    return structure.structureType == STRUCTURE_CONTAINER && structure.store[RESOURCE_ENERGY] > 0;
                 }
             });
     
@@ -46,6 +46,11 @@ var roleUpgrader = {
                     creep.moveTo(targets[0]);
                 }
                 return
+            }
+            
+            // Default: storage
+            if(creep.withdraw(creep.room.storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(creep.room.storage);
             }
     	}
     }
