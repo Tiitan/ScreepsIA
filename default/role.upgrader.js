@@ -1,5 +1,12 @@
 var roleUpgrader = {
 
+    getSpawnInfo: function(mainRoom, creeps) {
+            if (!require("helper").shouldSpawn(creeps, 1, 30))
+                return null;
+                
+            return { body: [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE], role: 'upgrader', task: null };
+        },
+
     run: function(creep) {
 
         if(creep.memory.upgrading && creep.carry.energy == 0) {

@@ -1,7 +1,21 @@
 var roleHarvester = {
 
+    getSpawnInfo: function(mainRoom, creeps) {
+        if (!require("helper").shouldSpawn(creeps, 2, 45))
+            return null;
+            
+        var task = 0;
+        if (creeps.length == 1 && creeps[0].memory.task == 0)
+            task = 1;
+        if (creeps.length == 2 && creeps[0].memory.task != creeps[1].memory.task)
+        {
+            task = creeps[0].ticksToLive < creeps[1].ticksToLive ? creeps[0].memory.task : creeps[1].memory.task;
+        }
+            
+        return { body: [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE], role: 'harvester', task: task };
+    },
+
     run: function(creep) {
-        
 	    if(creep.memory.building && creep.carry.energy < creep.carryCapacity) {
             creep.memory.building = false;
 	    }

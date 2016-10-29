@@ -1,5 +1,12 @@
 var roleRepairer = {
 
+    getSpawnInfo: function(mainRoom, creeps) {
+        if (!require("helper").shouldSpawn(creeps, 0, 0))
+            return null;
+            
+        return { body: [WORK, CARRY, MOVE], role: 'repairer', task: null };
+    },
+
     run: function(creep) {
 
 	    if(creep.memory.building && creep.carry.energy == 0) {

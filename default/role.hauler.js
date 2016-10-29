@@ -1,5 +1,28 @@
 var roleHauler = {
 
+    getSpawnInfo: function(mainRoom, creeps) {
+        
+        if (!require('helper').shouldSpawn(creeps, 2, 30))
+            return null;
+            
+        // Define task
+        var task = 0;
+        if (creeps.length == 1 && creeps[0].memory.task == 0) {
+            task = 1;
+        }
+        else if (creeps.length == 2) {
+            task = creeps[0].ticksToLive < creeps[1].ticksToLive ? creeps[0].memory.task : creeps[1].memory.task;
+        }
+        
+        // Choose body based on task
+        var body = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
+        if (task == 1)
+            body.push(CARRY, CARRY, MOVE, CARRY, MOVE);
+                
+            
+        return { body: body, role: 'hauler', task: task };
+    },
+
     run: function(creep) {
 
         if(creep.memory.upgrading && creep.carry.energy < 30) {

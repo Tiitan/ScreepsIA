@@ -1,5 +1,12 @@
 var roleThief = {
 
+    getSpawnInfo: function(mainRoom, creeps) {
+        if (!require("helper").shouldSpawn(creeps, 1, 200) || !Game.flags['DepotThiefFlag'])
+            return null;
+            
+        return { body: [CARRY, CARRY, MOVE, MOVE], role: 'thief', task: null };
+    },
+
     run: function(creep) {
         
         if(creep.memory.upgrading && creep.carry.energy < 30) {

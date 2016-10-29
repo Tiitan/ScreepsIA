@@ -1,5 +1,13 @@
 var roleBuilder = {
 
+    getSpawnInfo: function(mainRoom, creeps) {
+        // TODO multiroom FIND_CONSTRUCTION_SITES
+        if (!require("helper").shouldSpawn(creeps, 2, 30) || mainRoom.find(FIND_CONSTRUCTION_SITES).length == 0)
+            return null;
+            
+        return { body: [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE], role: 'builder', task: null };
+    },
+
     run: function(creep) {
 
 	    if(creep.memory.building && creep.carry.energy == 0) {
