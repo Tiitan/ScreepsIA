@@ -4,6 +4,13 @@ module.exports.loop = function () {
 
     for(var name in Memory.creeps) {
         if(!Game.creeps[name]) {
+            try {
+                var roleFile = require('role.' + Memory.creeps[name].role);
+                if (roleFile.onCreepDied)
+                    roleFile.onCreepDied(name);
+            }
+            catch(error) { exceptionHandler.print(error) }
+            
             delete Memory.creeps[name];
             console.log('Clearing non-existing creep memory:', name);
         }
