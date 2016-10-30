@@ -23,7 +23,7 @@ var structureSpawn = {
         
         function trySpawn(spawnInfo) {
             var newName = spawn.createCreep(spawnInfo.body, undefined, {role: spawnInfo.role, task: spawnInfo.task, mainRoom: spawn.room.name});
-            console.log('Spawning new ' + spawnInfo.role + ': ' + newName);
+            console.log('Spawning new ' + spawnInfo.role + ': ' + newName + ' in ' + spawn.name + '(' + spawn.room.name + ')');
             return newName;
         }
     }

@@ -1,7 +1,16 @@
 module.exports.loop = function () {
 
     var exceptionHandler = require('exceptionHandler');
+    
+    // Clean flag
+    for(var flagName in Memory.flags) {
+        if(!Game.flags[flagName]) {
+            delete Memory.flags[flagName];
+            console.log('Clearing non-existing flag memory:', flagName);
+        }
+    }
 
+    // Clean creep
     for(var name in Memory.creeps) {
         if(!Game.creeps[name]) {
             try {
@@ -16,6 +25,19 @@ module.exports.loop = function () {
         }
     }
 
+    // Initialize new flags
+    for (var flagName in Game.flags)
+    {
+        var flag = Game.flags[flagName];
+        if (!flag.memory.mainRoom) {
+            try {
+                flag.memory.mainRoom = require('mainRoom').getNearestmainRoom(flag.pos);
+            }
+            catch(error) { exceptionHandler.print(error) }      
+        }
+    }
+
+    // Update room
     for (var roomId in Game.rooms)
     {
         var room = Game.rooms[roomId];
@@ -24,10 +46,12 @@ module.exports.loop = function () {
                 var mainRoom = require('mainRoom');
                 mainRoom.run(room);
             }
-            catch(error) { exceptionHandler.print(error) }
+            catch(error) { exceptionHandler.print(error) }      
+
         }
     }
 
+    // Update structure
     for(var structId in Game.structures) {
         try {
             var structure = Game.structures[structId];
@@ -39,6 +63,7 @@ module.exports.loop = function () {
         catch(error) { exceptionHandler.print(error) }
     }
 
+    // Update creep
     for(var name in Game.creeps) {
         try {
             var creep = Game.creeps[name];

@@ -1,10 +1,10 @@
 var roleRepairer = {
 
     getSpawnInfo: function(mainRoom, creeps) {
-        if (!require("helper").shouldSpawn(creeps, 0, 0))
-            return null;
-            
-        return { body: [WORK, CARRY, MOVE], role: 'repairer', task: null };
+        var targets = mainRoom.find(FIND_STRUCTURES, { filter: function(object){ return (object.structureType === STRUCTURE_TOWER); } });
+        if (require("helper").shouldSpawn(creeps, 1, 0) && targets.length == 0)
+            return { body: [WORK, CARRY, MOVE], role: 'repairer', task: null };
+        return null;
     },
 
     run: function(creep) {
@@ -32,12 +32,12 @@ var roleRepairer = {
                     creep.moveTo(sortedTarget[0]);
                 }
             }
-            else
-            {
-                creep.moveTo(Game.flags['IdleFlag']);
+            else {
+                creep.say('Idle');
             }
 	    }
 	    else {
+	        // Find in container
             targets = creep.room.find(FIND_STRUCTURES, {
             filter: (structure) => {
                 return structure.structureType == STRUCTURE_CONTAINER && structure.store[RESOURCE_ENERGY] > 0;
@@ -48,9 +48,30 @@ var roleRepairer = {
                 if(creep.withdraw(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(targets[0]);
                 }
+                return;
             }
-            else
-                creep.moveTo(Game.flags['IdleFlag'].pos);
+
+            // Default if storage: storage
+            if (creep.room.storage) {
+                if(creep.withdraw(creep.room.storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(creep.room.storage);
+                }
+                return;
+            }
+            
+            // Default if no storage: spawn (if full)
+            var target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+                filter: (structure) => {
+                    return structure.structureType == STRUCTURE_SPAWN;
+                }
+            });
+            if (target)
+            {
+                if(target.energy != target.energyCapacity || creep.withdraw(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(target);
+                }
+                return;
+            }
 	    }
 	}
 };

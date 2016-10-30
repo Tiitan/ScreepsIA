@@ -1,6 +1,8 @@
 module.exports = {
 
     run: function(room) {
+        
+        // find room source (initialisation)
         if (!room.memory.sources) {
             room.memory.sources = [];
             var sources = room.find(FIND_SOURCES);
@@ -16,6 +18,19 @@ module.exports = {
             console.log('add source to main room list: ' + newSource.id);
             roomMemory.sources.push(new source(null, newSource.pos, newSource.id, getMiningSlot(newSource.pos)));
         }
+    },
+    
+    getNearestmainRoom: function(position) {
+        var nearestRoomName;
+        var nearestDistance = Number.POSITIVE_INFINITY;
+        for (var roomName in Memory.rooms) {
+            var distance = Game.map.getRoomLinearDistance(roomName, position.roomName);
+            if (distance < nearestDistance) {
+                nearestRoomName = roomName;
+                nearestDistance = distance;
+            }
+        }
+        return nearestRoomName;
     }
 };
 

@@ -11,8 +11,15 @@ var roleHarvester = {
         {
             task = creeps[0].ticksToLive < creeps[1].ticksToLive ? creeps[0].memory.task : creeps[1].memory.task;
         }
+        
+        if (mainRoom.energyCapacityAvailable < 550) // RCL 1
+            var body = [WORK, WORK, CARRY, MOVE];
+        else if (mainRoom.energyCapacityAvailable < 800) // RCL 2
+            var body = [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+        else // RCL 3+
+            var body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
             
-        return { body: [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE], role: 'harvester', task: task };
+        return { body: body, role: 'harvester', task: task };
     },
 
     run: function(creep) {
@@ -34,6 +41,9 @@ var roleHarvester = {
                 if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(targets[0]);
                 }
+            }
+            else {
+                creep.drop(RESOURCE_ENERGY);
             }
 	    }
 	    else {

@@ -14,11 +14,16 @@ var roleHauler = {
             task = creeps[0].ticksToLive < creeps[1].ticksToLive ? creeps[0].memory.task : creeps[1].memory.task;
         }
         
-        // Choose body based on task
-        var body = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
-        if (task == 1)
-            body.push(CARRY, CARRY, MOVE, CARRY, MOVE);
-                
+        if (mainRoom.energyCapacityAvailable < 550) // RCL 1
+            var body = [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
+        else if (mainRoom.energyCapacityAvailable < 800) // RCL 2
+            var body = [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
+        else { // RCL 3+
+            // Choose body based on task. TODO: choose based on distance.
+            var body = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
+            if (task == 1)
+                body.push(CARRY, CARRY, MOVE, CARRY, MOVE);
+        }
             
         return { body: body, role: 'hauler', task: task };
     },
@@ -44,16 +49,17 @@ var roleHauler = {
 	
 	
     	function findDropLocation() {
-    	    // Fill spawn
-            var target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {
+    	    // Fill spawn & controller depot
+            var targets = creep.room.find(FIND_STRUCTURES, {
                 filter: (structure) => {
-                    return (structure.structureType == STRUCTURE_EXTENSION ||
-                            structure.structureType == STRUCTURE_SPAWN) && structure.energy < structure.energyCapacity;
+                    return (((structure.structureType == STRUCTURE_EXTENSION ||structure.structureType == STRUCTURE_SPAWN) && structure.energy < structure.energyCapacity) || 
+                            (structure.structureType == STRUCTURE_CONTAINER && structure.pos.inRangeTo(creep.room.controller, 3) && structure.store[RESOURCE_ENERGY] + creep.carryCapacity < structure.storeCapacity));
                 }
             });
-            if(target) {
-                if(creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(target);
+            if(targets.length > 0) {
+                targets = _.sortBy(targets, t => creep.pos.getRangeTo(t))
+                if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(targets[0]);
                 }
                 return;
             }
@@ -67,20 +73,6 @@ var roleHauler = {
             if(target) {
                 if(creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(target);
-                }
-                return;
-            }
-
-            //fill controller depot
-            targets = creep.room.controller.pos.findInRange(FIND_STRUCTURES, 2, {
-                filter: (structure) => {
-                    return structure.structureType == STRUCTURE_CONTAINER && creep.carryCapacity <= structure.storeCapacity - structure.store[RESOURCE_ENERGY];
-                }
-            });
-            if (targets.length > 0)
-            {
-                if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0]);
                 }
                 return;
             }
@@ -119,7 +111,12 @@ var roleHauler = {
                 if(creep.withdraw(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(targets[0]);
                 }
+                return;
             }
+
+            // default: move to source
+            if (!creep.pos.inRangeTo(sources[creep.memory.task], 2))
+                creep.moveTo(sources[creep.memory.task]);
     	}
     }
 };

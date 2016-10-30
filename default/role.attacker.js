@@ -1,39 +1,64 @@
 var roleAttacker = {
     
     getSpawnInfo: function(mainRoom, creeps) {
-            if (!require('helper').shouldSpawn(creeps, 1, 45) || !Game.flags['AttackFlag'])
-                return null;
-                
-            return { body: [ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE], role: 'attaker', task: task };
+        var flag = Game.flags['AttackFlag'];
+        if (flag && !flag.memory.creepCount)
+            flag.memory.creepCount = 0;
+            
+        if (require('helper').shouldSpawn(creeps, 1, 45) && Game.flags['AttackFlag'] && flag.memory.creepCount < 1)
+            return { body: [ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE], role: 'attacker', task: flag.name };
+        return null;
+    },
+
+    initialize: function(creep) {
+        if (creep.memory.task) {
+            var flag = Game.flags[creep.memory.task];
+            if (flag) {
+                flag.memory.creepCount++;
+            }
+        }
+    },
+
+    onCreepDied: function(creepName) {
+        var creepMemory = Memory.creeps[creepName];
+        if (creepMemory && creepMemory.task) {
+            var flag = Game.flags[creepMemory.task];
+            if (flag && flag.memory.creepCount > 0)
+              flag.memory.creepCount--;
+        }
     },
 
     run: function(creep) {
-        if (Game.flags['AttackFlag']) {
-    	    if (!creep.pos.isNearTo(Game.flags['AttackFlag']))
+        var flag = Game.flags[creep.memory.task];
+        if (flag) {
+    	    if (!creep.pos.isNearTo(flag))
     	    {
-    	        creep.moveTo(Game.flags['AttackFlag']);
+    	        creep.moveTo(flag);
     	    }
     	    else
     	    {
-    	        var targets = Game.flags['AttackFlag'].pos.findInRange(FIND_STRUCTURES, 0);
-    	        //targets.concat(Game.flags['AttackFlag'].pos.findInRange(FIND_HOSTILE_CONSTRUCTION_SITES, 0))
+    	        var targets = flag.pos.findInRange(FIND_STRUCTURES, 0);
     	        if (targets.length > 0) {
     	            creep.attack(targets[0]);
     	        }
     	        else {
-    	            console.log(creep.name + ': target destroyed. (' + Game.flags['AttackFlag'].pos + ')');
-    	            if (Game.flags['AttackFlag2']) {
-                        Game.flags['AttackFlag2'].pos.createFlag('AttackFlag');
-                        Game.flags['AttackFlag2'].remove();
-    	            }
-    	            else {
-    	                Game.flags['AttackFlag'].remove();
-    	            }
+    	            console.log(creep.name + ': target destroyed. (' + flag.pos + ')');
+	                flag.remove();
     	        }
     	    }
         }
         else {
-            creep.moveTo(Game.flags['IdleFlag']);
+            // finished: recycle.
+            var spawns = Game.rooms[creep.memory.mainRoom].find(FIND_STRUCTURES, {
+                filter: (structure) => {
+                    return structure.structureType == STRUCTURE_SPAWN;
+                }
+            });
+            if (spawns.length > 0) {
+                creep.moveTo(spawns[0]);
+                spawns[0].recycleCreep(creep) 
+            }
+
         }
     }
 };

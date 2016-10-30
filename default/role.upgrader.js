@@ -1,11 +1,18 @@
-var roleUpgrader = {
+module.exports = {
 
     getSpawnInfo: function(mainRoom, creeps) {
-            if (!require("helper").shouldSpawn(creeps, 1, 30))
-                return null;
-                
-            return { body: [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE], role: 'upgrader', task: null };
-        },
+        if (!require("helper").shouldSpawn(creeps, 2, 30))
+            return null;
+        
+        if (mainRoom.energyCapacityAvailable < 550) // RCL 1
+            var body = [WORK, CARRY, MOVE, MOVE];
+        else if (mainRoom.energyCapacityAvailable < 800) // RCL 2
+            var body = [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+        else // RCL 3+
+            var body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE];
+            
+        return { body: body, role: 'upgrader', task: null };
+    },
 
     run: function(creep) {
 
@@ -46,21 +53,36 @@ var roleUpgrader = {
                     return structure.structureType == STRUCTURE_CONTAINER && structure.store[RESOURCE_ENERGY] > 0;
                 }
             });
-    
             if (targets.length > 0)
             {
                 if(creep.withdraw(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(targets[0]);
                 }
-                return
+                return;
             }
             
-            // Default: storage
-            if(creep.withdraw(creep.room.storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(creep.room.storage);
+            
+            // Default if storage: storage
+            if (creep.room.storage) {
+                if(creep.withdraw(creep.room.storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(creep.room.storage);
+                }
+                return;
+            }
+            
+            // Default if no storage: spawn (if full)
+            var target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+                filter: (structure) => {
+                    return structure.structureType == STRUCTURE_SPAWN;
+                }
+            });
+            if (target)
+            {
+                if(target.energy != target.energyCapacity || creep.withdraw(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(target);
+                }
+                return;
             }
     	}
     }
 };
-
-module.exports = roleUpgrader;

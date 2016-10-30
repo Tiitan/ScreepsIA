@@ -4,8 +4,16 @@ module.exports = {
         
         // Local builder
         // TODO multiroom FIND_CONSTRUCTION_SITES
-        if (require("helper").shouldSpawn(creeps, 1, 30) && mainRoom.find(FIND_CONSTRUCTION_SITES).length > 0) {
-            return { body: [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE], role: 'builder', task: null };
+        if (require("helper").shouldSpawn(creeps, 2, 30) && mainRoom.find(FIND_CONSTRUCTION_SITES).length > 0) {
+            
+            if (mainRoom.energyCapacityAvailable < 550) // RCL 1
+                var body = [WORK, WORK, CARRY, MOVE];
+            else if (mainRoom.energyCapacityAvailable < 800) // RCL 2
+                var body = [WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+            else // RCL 3+
+                var body = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE];
+                
+            return { body: body, role: 'builder', task: null };
         }
         
         // Send builder to colony
@@ -99,7 +107,8 @@ module.exports = {
             var flag = Game.flags[creep.memory.task];
             if (flag) {
                 // Go to destination room
-                if (!creep.pos.inRangeTo(Game.flags[creep.memory.task].pos, 10)) {
+                if (!creep.pos.inRangeTo(flag.pos, 10)) {
+                    creep.moveTo(flag);
                     return false;
                 }
             }

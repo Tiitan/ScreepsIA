@@ -1,10 +1,10 @@
 var roleScoot = {
 
     getSpawnInfo: function(mainRoom, creeps) {
-        if (!require("helper").shouldSpawn(creeps, 0, 0) || !Game.flags['ScootTarget'])
-            return null;
+        if (require("helper").shouldSpawn(creeps, 1, 0) && Game.flags['ScootTarget'] && Game.flags['ScootTarget'].memory.mainRoom == mainRoom.name)
+            return { body: [MOVE], role: 'scoot', task: 'ScootTarget' };
             
-        return { body: [MOVE], role: 'scoot', task: null };
+        return null;
     },
 
     initialize: function(creep) {
