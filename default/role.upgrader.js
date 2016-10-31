@@ -8,7 +8,9 @@ module.exports = {
             var body = [WORK, CARRY, MOVE, MOVE];
         else if (mainRoom.energyCapacityAvailable < 800) // RCL 2
             var body = [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
-        else // RCL 3+
+        else if (mainRoom.energyCapacityAvailable < 1300) // RCL 3
+            var body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE];
+        else // RCL 4+
             var body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE];
             
         return { body: body, role: 'upgrader', task: null };

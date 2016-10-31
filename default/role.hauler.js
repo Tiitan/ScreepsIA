@@ -99,24 +99,25 @@ var roleHauler = {
             }
             
     	    // Withdraw task container
-    	    var sources = creep.room.find(FIND_SOURCES);
-            targets = sources[creep.memory.task].pos.findInRange(FIND_STRUCTURES, 2, {
-                filter: (structure) => {
-                    return structure.structureType == STRUCTURE_CONTAINER;
-                }
-            });
-
-            if (targets.length > 0)
-            {
-                if(creep.withdraw(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0]);
-                }
-                return;
-            }
-
-            // default: move to source
-            if (!creep.pos.inRangeTo(sources[creep.memory.task], 2))
-                creep.moveTo(sources[creep.memory.task]);
+	        var targets = creep.room.memory.sources.filter((source) => source.task == creep.memory.task);
+	        if (targets.length > 0) {
+	            var targetPosition = require('helper').getRoomPosition(targets[0].serializedPos);
+	            if (creep.pos.inRangeTo(targetPosition, 5)) {
+                    targets = creep.pos.findInRange(FIND_STRUCTURES, 5, {
+                        filter: (structure) => {
+                            return structure.structureType == STRUCTURE_CONTAINER;
+                        }
+                    });
+                    if (targets.length > 0) {
+                        if(creep.withdraw(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                            creep.moveTo(targets[0]);
+                        }
+                        return;
+                    }
+	            }
+	            else
+	                creep.moveTo(targetPosition)
+	        }
     	}
     }
 };

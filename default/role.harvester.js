@@ -1,15 +1,10 @@
 var roleHarvester = {
 
     getSpawnInfo: function(mainRoom, creeps) {
-        if (!require("helper").shouldSpawn(creeps, 2, 45))
+        
+        var task = getAvailableSourceTask(mainRoom, creeps);
+        if (task == null) {
             return null;
-            
-        var task = 0;
-        if (creeps.length == 1 && creeps[0].memory.task == 0)
-            task = 1;
-        if (creeps.length == 2 && creeps[0].memory.task != creeps[1].memory.task)
-        {
-            task = creeps[0].ticksToLive < creeps[1].ticksToLive ? creeps[0].memory.task : creeps[1].memory.task;
         }
         
         if (mainRoom.energyCapacityAvailable < 550) // RCL 1
@@ -20,6 +15,31 @@ var roleHarvester = {
             var body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
             
         return { body: body, role: 'harvester', task: task };
+        
+        function getAvailableSourceTask(mainRoom, creeps) {
+            var sources = mainRoom.memory.sources.filter((x) => x.task != null);
+            
+            // init match
+            var sourceMatch = {};
+            for (var i = 0; i < sources.length; i++) {
+                sourceMatch[sources[i].task] = 0;
+            }
+            
+            // count creeps on each task
+            for (var name in creeps) {
+                var creep = creeps[name];
+                if (creep.ticksToLive > 45) {
+                    sourceMatch[creep.memory.task] += 1;
+                }
+            }
+            
+            // return the first available task
+            for (var task in sourceMatch) {
+                if (sourceMatch[task] == 0)
+                    return task;
+            }
+            return null;
+        }
     },
 
     run: function(creep) {
@@ -31,6 +51,8 @@ var roleHarvester = {
 	    }
 
 	    if(creep.memory.building) {
+	        
+	        // Drop
             targets = creep.pos.findInRange(FIND_STRUCTURES, 2, {
             filter: (structure) => {
                 return structure.structureType == STRUCTURE_CONTAINER && structure.store[RESOURCE_ENERGY] < structure.storeCapacity;
@@ -47,6 +69,8 @@ var roleHarvester = {
             }
 	    }
 	    else {
+	        
+	        // Harvest
 	        var targets = creep.room.memory.sources.filter((source) => source.task == creep.memory.task);
 	        if (targets.length > 0) {
 	            var targetPosition = require('helper').getRoomPosition(targets[0].serializedPos);
