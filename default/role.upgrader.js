@@ -1,18 +1,23 @@
 module.exports = {
 
     getSpawnInfo: function(mainRoom, creeps) {
-        if (!require("helper").shouldSpawn(creeps, 2, 30))
+        var helper = require("helper");
+        if (!helper.shouldSpawn(creeps, 3, 30))
             return null;
         
         if (mainRoom.energyCapacityAvailable < 550) // RCL 1
-            var body = [WORK, CARRY, MOVE, MOVE];
+            var body = helper.getBody({[WORK]: 1, [CARRY]:1, [MOVE]: 2});
         else if (mainRoom.energyCapacityAvailable < 800) // RCL 2
-            var body = [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+            var body = helper.getBody({[WORK]: 3, [CARRY]:2, [MOVE]: 3});
         else if (mainRoom.energyCapacityAvailable < 1300) // RCL 3
-            var body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE];
-        else // RCL 4+
-            var body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE];
-            
+            var body = helper.getBody({[WORK]: 5, [CARRY]:2, [MOVE]: 4});
+        else  if (mainRoom.energyCapacityAvailable < 1800) // RCL 4
+            var body = helper.getBody({[WORK]: 6, [CARRY]:2, [MOVE]: 4});
+        else { // RCL 5+ (6=>2300)
+            var body = helper.getBody({[WORK]: 8, [CARRY]:2, [MOVE]: 4});
+            if (mainRoom.storage && mainRoom.storage.store[RESOURCE_ENERGY] > 50000)
+                body = helper.getBody({[WORK]: 11, [CARRY]:5, [MOVE]: 8});
+        }
         return { body: body, role: 'upgrader', task: null };
     },
 
