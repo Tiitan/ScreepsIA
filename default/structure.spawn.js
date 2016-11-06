@@ -5,7 +5,7 @@ var structureSpawn = {
         if (spawn.spawning)
             return;
         
-        var roles = ['hauler', 'harvester', 'upgrader', 'builder', 'repairer', 'thief', 'attacker', 'colonist', 'scoot'];
+        var roles = ['protector', 'hauler', 'harvester', 'upgrader', 'builder', 'repairer', 'thief', 'colonist', 'scoot', 'attacker'];
             
         for(var i = 0; i < roles.length; i++) {
             try {

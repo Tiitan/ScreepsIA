@@ -2,7 +2,7 @@ var roleHarvester = {
 
     getSpawnInfo: function(mainRoom, creeps) {
         
-        var source = require('helper').getAvailableSource(mainRoom, creeps, 45);
+        var source = require('helper').getAvailableSource(mainRoom, creeps, 45, 'harvester');
         if (source == null) {
             return null;
         }
@@ -80,8 +80,9 @@ var roleHarvester = {
 	        var targets = Memory.rooms[creep.memory.mainRoom].sources.filter((source) => source.task == creep.memory.task);
 	        if (targets.length > 0) {
 	            var targetPosition = require('helper').getRoomPosition(targets[0].serializedPos);
-	            if (creep.pos.isNearTo(targetPosition))
-	                creep.harvest(Game.getObjectById(targets[0].id));
+	            if (creep.pos.isNearTo(targetPosition)) {
+	                var res = creep.harvest(Game.getObjectById(targets[0].id));
+	            }
 	            else
 	                creep.moveTo(targetPosition)
 	        }

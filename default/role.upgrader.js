@@ -2,7 +2,7 @@ module.exports = {
 
     getSpawnInfo: function(mainRoom, creeps) {
         var helper = require("helper");
-        if (!helper.shouldSpawn(creeps, 3, 30))
+        if (!helper.shouldSpawn(creeps, 2, 30))
             return null;
         
         if (mainRoom.energyCapacityAvailable < 550) // RCL 1

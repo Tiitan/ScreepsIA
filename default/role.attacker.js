@@ -1,4 +1,4 @@
-var roleAttacker = {
+module.exports = {
     
     getSpawnInfo: function(mainRoom, creeps) {
         var flag = Game.flags['AttackFlag'];
@@ -37,9 +37,11 @@ var roleAttacker = {
     	    }
     	    else
     	    {
-    	        var targets = flag.pos.findInRange(FIND_STRUCTURES, 0);
+    	        var targets = flag.pos.findInRange(FIND_HOSTILE_CREEPS, 0);
+    	        targets = targets.concat(flag.pos.findInRange(FIND_STRUCTURES, 0));
     	        if (targets.length > 0) {
-    	            creep.attack(targets[0]);
+	                creep.attack(targets[0]);
+	                creep.move(targets[0]);
     	        }
     	        else {
     	            console.log(creep.name + ': target destroyed. (' + flag.pos + ')');
@@ -49,18 +51,7 @@ var roleAttacker = {
         }
         else {
             // finished: recycle.
-            var spawns = Game.rooms[creep.memory.mainRoom].find(FIND_STRUCTURES, {
-                filter: (structure) => {
-                    return structure.structureType == STRUCTURE_SPAWN;
-                }
-            });
-            if (spawns.length > 0) {
-                creep.moveTo(spawns[0]);
-                spawns[0].recycleCreep(creep) 
-            }
-
+            creep.memory.recycle = true;
         }
     }
 };
-
-module.exports = roleAttacker;

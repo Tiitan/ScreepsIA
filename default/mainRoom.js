@@ -1,7 +1,7 @@
 module.exports = {
 
     run: function(room) {
-        
+        room.memory.mainRoom = true;
         // find room source (initialisation)
         if (!room.memory.sources) {
             room.memory.sources = [];
@@ -24,6 +24,8 @@ module.exports = {
         var nearestRoomName;
         var nearestDistance = Number.POSITIVE_INFINITY;
         for (var roomName in Memory.rooms) {
+            if (!Memory.rooms[roomName].mainRoom)
+                continue;
             var distance = Game.map.getRoomLinearDistance(roomName, position.roomName);
             if (distance < nearestDistance) {
                 nearestRoomName = roomName;

@@ -3,8 +3,7 @@ module.exports = {
     getSpawnInfo: function(mainRoom, creeps) {
         
         // Local builder
-        // TODO multiroom FIND_CONSTRUCTION_SITES
-        if (require("helper").shouldSpawn(creeps, 2, 30) && mainRoom.find(FIND_CONSTRUCTION_SITES).length > 0) {
+        if (require("helper").shouldSpawn(creeps, 1, 30) && findConstructionSite(mainRoom.name).length > 0) {
             
             if (mainRoom.energyCapacityAvailable < 550) // RCL 1
                 var body = [WORK, WORK, CARRY, MOVE];
@@ -84,16 +83,16 @@ module.exports = {
             
             // build closest structure
             // TODO: define priority
-	        var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
+	        var targets = findConstructionSite(creep.memory.mainRoom);
 	        targets = _.sortBy(targets, t => creep.pos.getRangeTo(t))
             if(targets.length) {
                 if(creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(targets[0]);
                 }
             }
-            else {
-                if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(creep.room.controller)
+            else if (Game.rooms[creep.memory.mainRoom]) {
+                if(creep.upgradeController(Game.rooms[creep.memory.mainRoom].controller) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(Game.rooms[creep.memory.mainRoom].controller)
                 }
             }
             
@@ -164,7 +163,11 @@ function findEnergyInClosestContainers(creep) {
 }
 
 function harvestClosestSource(creep) {
-    targets = creep.room.find(FIND_SOURCES);
+    targets = creep.room.find(FIND_SOURCES, {
+        filter: (source) => {
+            return (source.energy > 0);
+        }
+    });
     if (targets.length > 0) {
         targets = _.sortBy(targets, t => creep.pos.getRangeTo(t));
         if (creep.harvest(targets[0]) == ERR_NOT_IN_RANGE) {
@@ -174,3 +177,19 @@ function harvestClosestSource(creep) {
     }
     return false;
 }
+
+function findConstructionSite(mainRoomName) {
+    if (Game.rooms[mainRoomName])
+        var constructionSite = Game.rooms[mainRoomName].find(FIND_CONSTRUCTION_SITES);
+    if (Memory.rooms[mainRoomName] && Memory.rooms[mainRoomName].reserved) {
+        for (var reservedRoomName in Memory.rooms[mainRoomName].reserved) {
+            if (Game.rooms[reservedRoomName])
+                Array.prototype.push.apply(constructionSite, Game.rooms[reservedRoomName].find(FIND_CONSTRUCTION_SITES));
+        }
+    }
+    return constructionSite;
+}
+
+
+
+

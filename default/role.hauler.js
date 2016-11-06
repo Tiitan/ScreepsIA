@@ -2,7 +2,7 @@ module.exports = {
 
     getSpawnInfo: function(mainRoom, creeps) {
         
-        var source = require('helper').getAvailableSource(mainRoom, creeps, 30);
+        var source = require('helper').getAvailableSource(mainRoom, creeps, 30, 'hauler');
         
         // no task available or task not yet filled by an harvester
         if (source == null || _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester' && creep.memory.mainRoom == mainRoom.name && creep.memory.task == source.task).length == 0) {
@@ -22,7 +22,10 @@ module.exports = {
             var body = [];
             for (var i = 0; i < bodyMultiplier; i++)
                 Array.prototype.push.apply(body, [CARRY, CARRY, MOVE]);
-            // console.log(bodyMultiplier + " " + JSON.stringify(body));
+                
+            if (source.serializedPos.roomName != mainRoom.name) {
+                Array.prototype.push.apply(body, [WORK, WORK, MOVE]);
+            }
         }
             
         return { body: body, role: 'hauler', task: source.task };
@@ -49,6 +52,21 @@ module.exports = {
 	
 	
     	function findDropLocation() {
+    	    
+    	    // if outside main room, repair nerby struct
+    	    if (creep.room.name != creep.memory.mainRoom && creep.body.find(b => b.type == WORK)) {
+    	        var targets = creep.pos.findInRange(FIND_STRUCTURES, 2, {
+                    filter: function(object){ return (object.structureType === STRUCTURE_ROAD || object.structureType === STRUCTURE_CONTAINER) && (object.hits < object.hitsMax - 800); }
+                });
+                
+                if(targets.length > 0) {
+        	        var sortedTarget = _.sortBy(targets, t => creep.pos.getRangeTo(t));
+                    if(creep.repair(sortedTarget[0]) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(sortedTarget[0]);
+                    }
+                    return;
+                }
+    	    }
     	    // Fill nearest spawn/extension & controller depot & turret 
             var targets = getDropTarget();
             if(targets) {

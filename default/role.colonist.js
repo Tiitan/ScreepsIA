@@ -2,12 +2,13 @@ module.exports = {
 
     getSpawnInfo: function(mainRoom, creeps) {
         var flag = Game.flags['newColony'];
-        if (require('helper').shouldSpawn(creeps, 1, 0) && flag && !flag.memory.controled)
+        if (flag && flag.memory.colonist == null)
             return { body: [CLAIM, MOVE], role: 'colonist', task: null };
         
         if (mainRoom.memory.reserved) {
             for (var roomName in mainRoom.memory.reserved) {
-                if (mainRoom.memory.reserved[roomName].colonist == null)
+                if (mainRoom.memory.reserved[roomName].colonist == null && Game.rooms[roomName] &&
+                    (!Game.rooms[roomName].controller.reservation || Game.rooms[roomName].controller.reservation.ticksToEnd < 2000))
                     return { body: [CLAIM, MOVE, CLAIM, MOVE], role: 'colonist', task: roomName };
             }
         }
@@ -16,8 +17,15 @@ module.exports = {
 
     initialize: function(creep) {
         if (creep.memory.task) {
+            // reservation
             Game.rooms[creep.memory.mainRoom].memory.reserved[creep.memory.task].colonist = creep.name;
         }
+        else {
+            // new colony
+            var flag = Game.flags['newColony'];
+            flag.memory.colonist = creep.name;
+        }
+        
     },
 
     onCreepDied: function(creepName) {
@@ -25,20 +33,35 @@ module.exports = {
         if (creepMemory && creepMemory.task && Game.rooms[creepMemory.mainRoom].memory.reserved[creepMemory.task].colonist == creepName) {
             Game.rooms[creepMemory.mainRoom].memory.reserved[creepMemory.task].colonist = null;
         }
+        
+        if (creepMemory && !creepMemory.task) {
+            var flag = Game.flags['newColony'];
+            if (flag && flag.memory.colonist == creepName)
+                flag.memory.colonist = null;
+        }
     },
 
     run: function(creep) {
-        var target = null;
+        
+        var targetRoomName = null;
+        var flag = Game.flags['newColony'];
+        
         if (creep.memory.task)
-            target = new RoomPosition(25, 25, creep.memory.task);
-        else if (Game.flags['newColony']) {
-            target = Game.flags['newColony'].pos;
+            targetRoomName = creep.memory.task;
+        else if (flag) {
+            targetRoomName = flag.pos.roomName;
         }
         
-        if (target) {
+        if (targetRoomName) {
             // Go to destination room
-            if (target.roomName != creep.room.name) {
-                creep.moveTo(target);
+            if (targetRoomName != creep.room.name) {
+                
+                if (!creep.memory.path)
+                    creep.memory.path = Game.map.findRoute(creep.room.name, targetRoomName, {routeCallback: require('helper').roomHeuristic});
+                if (creep.memory.path) {
+                    var pathIndex = creep.memory.path.findIndex(x => x.room == creep.room.name);
+                    creep.moveTo(creep.pos.findClosestByRange(creep.memory.path[pathIndex + 1].exit));
+                }
                 return;
             } 
             

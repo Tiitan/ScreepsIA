@@ -1,4 +1,4 @@
-var helper = {
+module.exports = {
 
     getRoomPosition: function(serializedRoomPosition) {
         return new RoomPosition(serializedRoomPosition.x, serializedRoomPosition.y, serializedRoomPosition.roomName);
@@ -13,7 +13,7 @@ var helper = {
         return (roleCreeps.length < expectedNumber || hasDyingCreep) && roleCreeps.length < expectedNumber + 1;
     },
     
-    getAvailableSource: function(mainRoom, creeps, minLifeTime) {
+    getAvailableSource: function(mainRoom, creeps, minLifeTime, type) {
         var sources = mainRoom.memory.sources.filter((x) => x.task != null);
         
         // init match
@@ -32,8 +32,9 @@ var helper = {
         
         // return the first available task
         for (var task in sourceMatch) {
-            if (sourceMatch[task] == 0)
-                return sources.find((x) => x.task == task);
+            var source = sources.find((x) => x.task == task);
+            if (sourceMatch[task] < (((type + 'Count') in source) ? source[type + 'Count'] : 1))
+                return source;
         }
         return null;
     },
@@ -53,7 +54,37 @@ var helper = {
             cost += BODYPART_COST[body[i]];
         }
         return cost;
+    },
+    
+    getRoomCoordinate: function(roomName) {
+        if (roomName.length != 6)
+            throw(new Error("Invalid room name in splitRoomName"));
+        
+        return { 
+            qx: roomName.substr(0, 1), 
+            x: parseInt(roomName.substr(1, 2)),
+            qy: roomName.substr(3, 1), 
+            y: parseInt(roomName.substr(4, 2))
+        }
+    }, 
+    
+    roomHeuristic: function (roomName, previousRoomName) {
+        var forbiddenRooms = [];
+        var OWNED_COST = 1;
+        var OUTSIDE_SECTOR_COST = 1;
+        var INNER_SECTOR_COST = 2;
+        
+        if (forbiddenRooms.includes(roomName))
+            return Infinity;
+        
+        for (var ownedRoomName in Memory.rooms) {
+            if (ownedRoomName == roomName || (Memory.rooms[ownedRoomName].reserved && Memory.rooms[ownedRoomName].reserved[roomName]))
+                return OWNED_COST;
+        }
+        
+        var roomCoordinate = require('helper').getRoomCoordinate(roomName);
+        if (roomCoordinate.x % 10 == 0 || roomCoordinate.y % 10 == 0)
+            return OUTSIDE_SECTOR_COST;
+        return INNER_SECTOR_COST;
     }
 };
-
-module.exports = helper;
