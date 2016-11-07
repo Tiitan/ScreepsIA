@@ -33,6 +33,12 @@ module.exports = {
         // return the first available task
         for (var task in sourceMatch) {
             var source = sources.find((x) => x.task == task);
+            
+            // skip task if room unsafe.
+            if (source.serializedPos.roomName != mainRoom.name && Memory.rooms[source.serializedPos.roomName] && 
+                    Memory.rooms[source.serializedPos.roomName].invader && Memory.rooms[source.serializedPos.roomName].invader > 0)
+                continue;
+            
             if (sourceMatch[task] < (((type + 'Count') in source) ? source[type + 'Count'] : 1))
                 return source;
         }

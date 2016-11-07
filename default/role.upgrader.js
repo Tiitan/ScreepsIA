@@ -2,7 +2,8 @@ module.exports = {
 
     getSpawnInfo: function(mainRoom, creeps) {
         var helper = require("helper");
-        if (!helper.shouldSpawn(creeps, 2, 30))
+        var upgraderCount = mainRoom.memory.upgraderCount ? mainRoom.memory.upgraderCount : 2;
+        if (!helper.shouldSpawn(creeps, upgraderCount, 30))
             return null;
         
         if (mainRoom.energyCapacityAvailable < 550) // RCL 1
@@ -45,7 +46,9 @@ module.exports = {
     	function findEnergy()
     	{
     	    // Loot
-            var targets = creep.pos.findInRange(FIND_DROPPED_ENERGY, 2);
+            var targets = creep.pos.findInRange(FIND_DROPPED_ENERGY, 10, {
+                filter: (dropppedEnergy) => { return dropppedEnergy.energy > 500; }
+            });
             if (targets.length > 0) {
                 targets = _.sortBy(targets, t => creep.pos.getRangeTo(t))
                 if(creep.pickup(targets[0]) == ERR_NOT_IN_RANGE) {

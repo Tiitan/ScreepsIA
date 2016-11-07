@@ -3,7 +3,8 @@ module.exports = {
     getSpawnInfo: function(mainRoom, creeps) {
         
         // Local builder
-        if (require("helper").shouldSpawn(creeps, 1, 30) && findConstructionSite(mainRoom.name).length > 0) {
+        var builderCount = mainRoom.memory.builderCount ? mainRoom.memory.builderCount : 1;
+        if (require("helper").shouldSpawn(creeps, builderCount, 30) && findConstructionSite(mainRoom.name).length > 0) {
             
             if (mainRoom.energyCapacityAvailable < 550) // RCL 1
                 var body = [WORK, WORK, CARRY, MOVE];
@@ -132,8 +133,8 @@ module.exports = {
 };
 
 function lootEnergyNerby(creep) {
-    var targets = creep.pos.findInRange(FIND_DROPPED_ENERGY, 2, {
-        filter: (dropppedEnergy) => { return dropppedEnergy.energy > 10;
+    var targets = creep.pos.findInRange(FIND_DROPPED_ENERGY, 20, {
+        filter: (dropppedEnergy) => { return dropppedEnergy.energy > 50;
         }
     });
     if (targets.length > 0) {
@@ -149,7 +150,7 @@ function lootEnergyNerby(creep) {
 function findEnergyInClosestContainers(creep) {
     targets = creep.room.find(FIND_STRUCTURES, {
     filter: (structure) => {
-        return (structure.structureType == STRUCTURE_CONTAINER || structure.structureType == STRUCTURE_STORAGE) && structure.store[RESOURCE_ENERGY] > 300;
+        return (structure.structureType == STRUCTURE_CONTAINER || structure.structureType == STRUCTURE_STORAGE) && structure.store[RESOURCE_ENERGY] > creep.carryCapacity;
     }});
     if (targets.length > 0)
     {

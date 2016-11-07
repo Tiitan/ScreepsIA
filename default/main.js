@@ -1,6 +1,6 @@
 module.exports.loop = function () {
 
-    var exceptionHandler = require('exceptionHandler');
+    var logger = require('logger');
     
     cleanUp();
     initializeFlags();
@@ -23,7 +23,7 @@ module.exports.loop = function () {
                     if (roleFile.onCreepDied)
                         roleFile.onCreepDied(name);
                 }
-                catch(error) { exceptionHandler.print(error) }
+                catch(error) { logger.printError(error) }
                 
                 delete Memory.creeps[name];
                 console.log('Clearing non-existing creep memory:', name);
@@ -40,7 +40,7 @@ module.exports.loop = function () {
                 try {
                     flag.memory.mainRoom = require('mainRoom').getNearestmainRoom(flag.pos);
                 }
-                catch(error) { exceptionHandler.print(error) }      
+                catch(error) { logger.printError(error) }      
             }
         }
     }
@@ -55,21 +55,23 @@ module.exports.loop = function () {
                     var mainRoom = require('mainRoom');
                     mainRoom.run(room);
                 }
-                catch(error) { exceptionHandler.print(error) }
+                catch(error) { logger.printError(error) }
             }
             
             // Detect ennemies
             try {
                 var hostiles = room.find(FIND_HOSTILE_CREEPS)
                 if (hostiles.length > 0) {
-                    var nearestMainRoomName = require('mainRoom').getNearestmainRoom(roomName);
+                    var nearestMainRoomName = require('mainRoom').getNearestmainRoom(hostiles[0].room.name);
                     if (Game.map.getRoomLinearDistance(roomName, nearestMainRoomName) < 2) {
                         room.memory.invader = hostiles.length;
                         room.memory.invaderSerializedPos = hostiles[0].pos;
+                        
+                        logger.print("Hostile deteced in " + room.name + ", owner: " + hostiles[0].owner.username);
                     }
                 }
             }
-            catch(error) { exceptionHandler.print(error) }
+            catch(error) { exceptionHandler.printError(error) }
             
         }
     
@@ -82,7 +84,7 @@ module.exports.loop = function () {
                     case STRUCTURE_TOWER:  require('structure.tower').run(structure); break;
                 }
             }
-            catch(error) { exceptionHandler.print(error) }
+            catch(error) { exceptionHandler.printError(error) }
         }
     
         // Update creep
@@ -94,7 +96,7 @@ module.exports.loop = function () {
                         require('role.' + creep.memory.role).run(creep);
                 }
             }
-            catch(error) { exceptionHandler.print(error) }
+            catch(error) { exceptionHandler.printError(error) }
         }
     }
 }

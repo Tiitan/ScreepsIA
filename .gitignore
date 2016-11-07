@@ -1,2 +1,3 @@
 *.stackdump
 .sync
+dev/

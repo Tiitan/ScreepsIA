@@ -1,9 +1,10 @@
 module.exports = {
 
     run: function(room) {
-        room.memory.mainRoom = true;
-        // find room source (initialisation)
-        if (!room.memory.sources) {
+        // new room initialisation
+        if (!room.memory.mainRoom) {
+            room.memory.mainRoom = true;
+            
             room.memory.sources = [];
             var sources = room.find(FIND_SOURCES);
             for (var i = 0; i < sources.length; i++) {
@@ -20,13 +21,13 @@ module.exports = {
         }
     },
     
-    getNearestmainRoom: function(position) {
+    getNearestmainRoom: function(roomPosName) {
         var nearestRoomName;
         var nearestDistance = Number.POSITIVE_INFINITY;
         for (var roomName in Memory.rooms) {
             if (!Memory.rooms[roomName].mainRoom)
                 continue;
-            var distance = Game.map.getRoomLinearDistance(roomName, position.roomName);
+            var distance = Game.map.getRoomLinearDistance(roomName, roomPosName);
             if (distance < nearestDistance) {
                 nearestRoomName = roomName;
                 nearestDistance = distance;

@@ -2,6 +2,17 @@ var structureSpawn = {
 
     run: function(spawn) {
 
+        if (spawn.hits < spawn.hitsMax) {
+            var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+            if (closestHostile) {
+                spawn.room.controller.activateSafeMode();
+                
+                var message = "Safe mode activated in " + spawn.room.name + ", attacker: " + closestHostile.owner.username;
+                console.log(message)
+                Game.notify(message);
+            }
+        }
+
         if (spawn.spawning)
             return;
         
@@ -18,7 +29,7 @@ var structureSpawn = {
                     break;
                 }
             }
-            catch(error) { require('exceptionHandler').print(error); }
+            catch(error) { require('logger').printError(error); }
         }
         
         function trySpawn(spawnInfo) {
