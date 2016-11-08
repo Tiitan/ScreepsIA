@@ -1,3 +1,4 @@
 *.stackdump
 .sync
 dev/
+tutorial-1/

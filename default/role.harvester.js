@@ -23,13 +23,13 @@ var roleHarvester = {
         //transition
         switch (creep.memory.state) {
             case 'harvest':
-                if (creep.carry.energy == creep.carryCapacity) {
+                if (_.sum(creep.carry) == creep.carryCapacity) {
                    creep.memory.state = 'drop'; 
                 }
                 break;
                 
             case 'drop':
-                if (creep.carry.energy < creep.carryCapacity) {
+                if (_.sum(creep.carry) == 0) {
                    creep.memory.state = 'harvest'; 
                 }
                 break;
@@ -59,20 +59,38 @@ var roleHarvester = {
                 }
 	        }
 	        
-            var targets = creep.pos.findInRange(FIND_STRUCTURES, 2, {
-            filter: (structure) => {
-                return structure.structureType == STRUCTURE_CONTAINER && structure.store[RESOURCE_ENERGY] < structure.storeCapacity;
-            }});
-            if (targets.length > 0)
+	        // Repair my container if no one does.
+	        var nearbyContainer = creep.memory.containerId ? Game.getObjectById(creep.memory.containerId) : findAndSaveNearbyContainer();
+	        if (nearbyContainer && nearbyContainer.hits < nearbyContainer.hitsMax) {
+                if(creep.repair(nearbyContainer) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(nearbyContainer);
+                }
+	        }
+	        else if (nearbyContainer && nearbyContainer.store[RESOURCE_ENERGY] < nearbyContainer.storeCapacity)
             {
-                targets = _.sortBy(targets, t => creep.pos.getRangeTo(t))
-                if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0]);
+                harvest();
+                if(creep.transfer(nearbyContainer, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(nearbyContainer);
                 }
             }
             else {
                 creep.drop(RESOURCE_ENERGY);
+                harvest();
             }
+	    }
+	    
+	    function findAndSaveNearbyContainer() {
+            var targets = creep.pos.findInRange(FIND_STRUCTURES, 2, {
+                filter: (structure) => {
+                    return structure.structureType == STRUCTURE_CONTAINER;
+                }
+            });
+            if (targets.length > 0) {
+                targets = _.sortBy(targets, t => creep.pos.getRangeTo(t));
+                creep.memory.containerId = targets[0].id;
+                return targets[0];
+            }
+            return null;
 	    }
 	    
 	    function harvest() {
@@ -83,8 +101,8 @@ var roleHarvester = {
 	            if (creep.pos.isNearTo(targetPosition)) {
 	                var res = creep.harvest(Game.getObjectById(targets[0].id));
 	            }
-	            else
-	                creep.moveTo(targetPosition)
+	            else if (_.sum(creep.carry) == 0) //harvest also called by the drop function to not waste a cycle, so only move if empty
+	                creep.moveTo(targetPosition);
 	        }
 	    }
     }

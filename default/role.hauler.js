@@ -53,10 +53,10 @@ module.exports = {
 	
     	function findDropLocation() {
     	    
-    	    // if outside main room, repair nerby struct
+    	    // if outside main room, repair nerby road
     	    if (creep.room.name != creep.memory.mainRoom && creep.body.find(b => b.type == WORK)) {
     	        var targets = creep.pos.findInRange(FIND_STRUCTURES, 2, {
-                    filter: function(object){ return (object.structureType === STRUCTURE_ROAD || object.structureType === STRUCTURE_CONTAINER) && (object.hits < object.hitsMax - 800); }
+                    filter: function(object){ return object.structureType === STRUCTURE_ROAD && (object.hits < object.hitsMax - 800); }
                 });
                 
                 if(targets.length > 0) {
@@ -74,7 +74,7 @@ module.exports = {
                 if(transferResult == ERR_NOT_IN_RANGE) {
                     creep.moveTo(targets[0]);
                 }
-                else if (transferResult == OK && targets.length > 1) {
+                else if (transferResult == OK && targets.length > 1 && _.sum(creep.carry) > getAvailableCapacity(targets[0])) {
                     creep.moveTo(targets[1]);
                 }
                 return;
@@ -83,6 +83,13 @@ module.exports = {
             // Default: storage
             if(creep.transfer(Game.rooms[creep.memory.mainRoom].storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(Game.rooms[creep.memory.mainRoom].storage);
+            }
+            
+            function getAvailableCapacity(object) {
+                if (object.energyCapacity)
+                    return object.energyCapacity - object.energy;
+                else
+                    return object.storeCapacity - _.sum(object.store);
             }
             
             function getDropTarget() {

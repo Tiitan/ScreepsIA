@@ -38,7 +38,7 @@ module.exports.loop = function () {
             var flag = Game.flags[flagName];
             if (!flag.memory.mainRoom) {
                 try {
-                    flag.memory.mainRoom = require('mainRoom').getNearestmainRoom(flag.pos);
+                    flag.memory.mainRoom = require('mainRoom').getNearestmainRoom(flag.pos.roomName);
                 }
                 catch(error) { logger.printError(error) }      
             }

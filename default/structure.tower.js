@@ -24,7 +24,7 @@ module.exports = {
         // Repair building
         var damagedStructures = tower.room.find(FIND_STRUCTURES, {
             filter: (structure) => structure.structureType != STRUCTURE_WALL && structure.structureType != STRUCTURE_RAMPART &&
-                                    structure.hits + 600 < structure.hitsMax
+                                    structure.hits / structure.hitsMax < 0.9
         });
         damagedStructures = _.sortBy(damagedStructures, t => t.hits)
         if(damagedStructures.length > 0) {
@@ -35,7 +35,8 @@ module.exports = {
         // Repair defenses
         damagedStructures = findDamagedWalls(tower.room, 100000);
         if(damagedStructures.length > 0) {
-            damagedStructures = _.sortBy(damagedStructures, t => -t.hits);
+                damagedStructures = _.sortBy(damagedStructures, t => t.hits);
+
             tower.repair(damagedStructures[0]);
         }
     }
@@ -46,6 +47,6 @@ function findDamagedWalls(room, minimum) {
             filter: (structure) => (structure.structureType == STRUCTURE_WALL || structure.structureType == STRUCTURE_RAMPART) &&
                                     structure.hits < minimum
         });
-    damagedStructures = _.sortBy(damagedStructures, t => t.hits)
+    damagedStructures = _.sortBy(damagedStructures, t => t.hits);
     return damagedStructures;
 }
