@@ -29,7 +29,7 @@ var roleHarvester = {
                 break;
                 
             case 'drop':
-                if (_.sum(creep.carry) == 0) {
+                if (_.sum(creep.carry) < 10) {
                    creep.memory.state = 'harvest'; 
                 }
                 break;
@@ -59,9 +59,10 @@ var roleHarvester = {
                 }
 	        }
 	        
-	        // Repair my container if no one does.
+	        // Repair my container if it's not empty or if there is an emergency.
 	        var nearbyContainer = creep.memory.containerId ? Game.getObjectById(creep.memory.containerId) : findAndSaveNearbyContainer();
-	        if (nearbyContainer && nearbyContainer.hits < nearbyContainer.hitsMax) {
+	        if (nearbyContainer && (nearbyContainer.hits < nearbyContainer.hitsMax && _.sum(nearbyContainer.store) > 50) || 
+	            nearbyContainer.hits < (nearbyContainer.hitsMax / 10)) {
                 if(creep.repair(nearbyContainer) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(nearbyContainer);
                 }

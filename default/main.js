@@ -70,8 +70,11 @@ module.exports.loop = function () {
                         logger.print("Hostile deteced in " + room.name + ", owner: " + hostiles[0].owner.username);
                     }
                 }
+                else if (typeof room.memory.invader !== 'undefined') {
+                    delete room.memory.invader;
+                }
             }
-            catch(error) { exceptionHandler.printError(error) }
+            catch(error) { logger.printError(error) }
             
         }
     
@@ -84,7 +87,7 @@ module.exports.loop = function () {
                     case STRUCTURE_TOWER:  require('structure.tower').run(structure); break;
                 }
             }
-            catch(error) { exceptionHandler.printError(error) }
+            catch(error) { logger.printError(error) }
         }
     
         // Update creep
@@ -96,7 +99,7 @@ module.exports.loop = function () {
                         require('role.' + creep.memory.role).run(creep);
                 }
             }
-            catch(error) { exceptionHandler.printError(error) }
+            catch(error) { logger.printError(error) }
         }
     }
 }

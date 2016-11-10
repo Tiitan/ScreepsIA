@@ -50,7 +50,6 @@ module.exports = {
             findEnergy();
         }
 	
-	
     	function findDropLocation() {
     	    
     	    // if outside main room, repair nerby road
@@ -93,11 +92,14 @@ module.exports = {
             }
             
             function getDropTarget() {
+                // Only fill tower if there is at least 2 haulers for safety
+                var haulers = _.filter(Game.creeps, (otherCreep) => otherCreep.memory.role == 'hauler' && creep.memory.mainRoom == otherCreep.memory.mainRoom);
+                
                 var targets = Game.rooms[creep.memory.mainRoom].find(FIND_STRUCTURES, {
                     filter: (structure) => {
                         return (((structure.structureType == STRUCTURE_EXTENSION ||structure.structureType == STRUCTURE_SPAWN) && structure.energy < structure.energyCapacity) || 
                                 (structure.structureType == STRUCTURE_CONTAINER && structure.pos.inRangeTo(creep.room.controller, 3) && structure.store[RESOURCE_ENERGY] + creep.carryCapacity < structure.storeCapacity) ||
-                                (structure.structureType == STRUCTURE_TOWER && structure.energy + creep.carryCapacity <= structure.energyCapacity));
+                                (structure.structureType == STRUCTURE_TOWER && structure.energy + creep.carryCapacity <= structure.energyCapacity && haulers > 1));
                     }
                 });
                 if(targets.length > 0) {
