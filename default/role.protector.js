@@ -5,7 +5,19 @@ module.exports = {
         for(var roomName in Memory.rooms) {
             if (Memory.rooms[roomName].invader > 0 && !Memory.rooms[roomName].protector && 
                 require('mainRoom').getNearestmainRoom(roomName) == mainRoom.name && Game.map.getRoomLinearDistance(roomName, mainRoom.name) < 2) {
-                return { body: [TOUGH, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE], role: 'protector', task: roomName };
+                    
+                if (mainRoom.energyCapacityAvailable < 550) // RCL 1
+                    var body = helper.getBody({[TOUGH]: 1, [ATTACK]:2, [MOVE]: 3});
+                else if (mainRoom.energyCapacityAvailable < 800) // RCL 2
+                    var body = helper.getBody({[TOUGH]: 1, [ATTACK]:4, [MOVE]: 5});
+                else if (mainRoom.energyCapacityAvailable < 1300) // RCL 3
+                    var body = helper.getBody({[TOUGH]: 1, [ATTACK]:8, [MOVE]: 9});
+                else  if (mainRoom.energyCapacityAvailable < 1800) // RCL 4
+                    var body = helper.getBody({[TOUGH]: 2, [ATTACK]:12, [MOVE]: 14});
+                else // RCL 5+ (6=>2300)
+                    var body = helper.getBody({[TOUGH]: 2, [ATTACK]:12, [MOVE]: 14});
+                    
+                return { body: body, role: 'protector', task: roomName };
             }
         }
         
