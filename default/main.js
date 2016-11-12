@@ -70,7 +70,7 @@ module.exports.loop = function () {
                         logger.print("Hostile deteced in " + room.name + ", owner: " + hostiles[0].owner.username);
                     }
                 }
-                else if (typeof room.memory.invader !== 'undefined') {
+                else if (room.memory.invader) {
                     delete room.memory.invader;
                 }
             }

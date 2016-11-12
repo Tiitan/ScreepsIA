@@ -6,6 +6,7 @@ module.exports = {
             if (Memory.rooms[roomName].invader > 0 && !Memory.rooms[roomName].protector && 
                 require('mainRoom').getNearestmainRoom(roomName) == mainRoom.name && Game.map.getRoomLinearDistance(roomName, mainRoom.name) < 2) {
                     
+                var helper = require("helper");
                 if (mainRoom.energyCapacityAvailable < 550) // RCL 1
                     var body = helper.getBody({[TOUGH]: 1, [ATTACK]:2, [MOVE]: 3});
                 else if (mainRoom.energyCapacityAvailable < 800) // RCL 2

@@ -2,33 +2,39 @@ module.exports = {
 
     getSpawnInfo: function(mainRoom, creeps) {
         
-        var source = require('helper').getAvailableSource(mainRoom, creeps, 30, 'hauler');
-        
-        // no task available or task not yet filled by an harvester
-        if (source == null || _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester' && creep.memory.mainRoom == mainRoom.name && creep.memory.task == source.task).length == 0) {
-            return null;
-        }
-        
-        var energyAvailable = creeps.length == 0 ? mainRoom.energyAvailable : mainRoom.energyCapacityAvailable;
-        if (energyAvailable < 550) // RCL 1
-            var body = [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
-        else if (energyAvailable < 800) // RCL 2
-            var body = [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
-        else { // RCL 3+
-            // TODO: choose body based on distance.
-            var bodyMultiplier = 3;
-            if (source.carryNeeded) 
-                bodyMultiplier = source.carryNeeded / 2;
-            var body = [];
-            for (var i = 0; i < bodyMultiplier; i++)
-                Array.prototype.push.apply(body, [CARRY, CARRY, MOVE]);
-                
-            if (source.serializedPos.roomName != mainRoom.name) {
-                Array.prototype.push.apply(body, [WORK, WORK, MOVE]);
+        var helper = require('helper');
+
+        var source = helper.getAvailableSource(mainRoom, _.filter(creeps, (creep) => Number.isInteger(creep.memory.task)), 30, 'hauler');
+        // source available for hauler and harvested
+        if (source != null && _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester' && creep.memory.mainRoom == mainRoom.name && creep.memory.task == source.task).length > 0) {
+            var energyAvailable = creeps.length == 0 ? mainRoom.energyAvailable : mainRoom.energyCapacityAvailable;
+            if (energyAvailable < 550) // RCL 1
+                var body = [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
+            else if (energyAvailable < 800) // RCL 2
+                var body = [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
+            else { // RCL 3+
+                // TODO: choose body based on distance.
+                var bodyMultiplier = 3;
+                if (source.carryNeeded) 
+                    bodyMultiplier = source.carryNeeded / 2;
+                var body = [];
+                for (var i = 0; i < bodyMultiplier; i++)
+                    Array.prototype.push.apply(body, [CARRY, CARRY, MOVE]);
+                    
+                if (source.serializedPos.roomName != mainRoom.name) {
+                    Array.prototype.push.apply(body, [WORK, WORK, MOVE]);
+                }
             }
+                
+            return { body: body, role: 'hauler', task: source.task };
         }
-            
-        return { body: body, role: 'hauler', task: source.task };
+        
+        if (mainRoom.storage && mainRoom.storage.store[RESOURCE_ENERGY] > 200000 && _.filter(creeps, (creep) => creep.memory.role == 'hauler' && creep.memory.task == "storage").length < 1) {
+            body = helper.getBody({[CARRY]:10, [MOVE]: 5});
+            return { body: body, role: 'hauler', task: "storage" };
+        }
+        
+        return null;
     },
 
     run: function(creep) {
@@ -80,8 +86,10 @@ module.exports = {
             }
             
             // Default: storage
-            if(creep.transfer(Game.rooms[creep.memory.mainRoom].storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(Game.rooms[creep.memory.mainRoom].storage);
+            if (creep.memory.task != "storage") {
+                if(creep.transfer(Game.rooms[creep.memory.mainRoom].storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(Game.rooms[creep.memory.mainRoom].storage);
+                }
             }
             
             function getAvailableCapacity(object) {
@@ -126,13 +134,18 @@ module.exports = {
             }
             
     	    // Withdraw task container
-	        var targets = Memory.rooms[creep.memory.mainRoom].sources.filter((source) => source.task == creep.memory.task);
-	        if (targets.length > 0) {
-	            var targetPosition = require('helper').getRoomPosition(targets[0].serializedPos);
+    	    if (creep.memory.task != "storage")
+    	        var target = Memory.rooms[creep.memory.mainRoom].sources.filter((source) => source.task == creep.memory.task)[0];
+    	    else
+    	        var target = Game.rooms[creep.memory.mainRoom].storage;
+	        
+	        if (target) {
+	            // TODO remove lookup for storage
+	            var targetPosition = target.serializedPos ? require('helper').getRoomPosition(target.serializedPos) : target.pos;
 	            if (creep.pos.inRangeTo(targetPosition, 2)) {
-                    targets = creep.pos.findInRange(FIND_STRUCTURES, 3, {
+                    var targets = creep.pos.findInRange(FIND_STRUCTURES, 3, {
                         filter: (structure) => {
-                            return structure.structureType == STRUCTURE_CONTAINER;
+                            return structure.structureType == STRUCTURE_CONTAINER || structure.structureType == STRUCTURE_STORAGE;
                         }
                     });
                     if (targets.length > 0) {
